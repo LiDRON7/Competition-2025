@@ -5,9 +5,6 @@ import depthai
 # Necessary imports for ArUco detection
 import imutils
 
-from Water_pump import Water_pump
-
-
 def get_lat_long():
     from geocoder import ip
     from datetime import datetime
@@ -19,9 +16,6 @@ def get_lat_long():
         return g.latlng[0], g.latlng[1], current_time_iso8601
     else:
         pass
-
-#initialize the water pump shooter
-water_shooter = Water_pump()
 
 markerIds = [] 
 markerCorners = [] 
