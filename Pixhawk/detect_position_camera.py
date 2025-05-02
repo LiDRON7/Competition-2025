@@ -9,9 +9,8 @@ drone = Drone()
 drone.set_mode("GUIDED")
 drone.arm()
 drone.takeoff(altitude=10)
-drone.set_mode("LOITER")  # Hover until marker detected
-drone.loitering(altitude=10, seconds=10)
-
+print("🛑 Staying in GUIDED mode for marker search (do not switch to LOITER).")
+time.sleep(2)  # Give time to stabilize at 10m
 # === ARUCO SETUP ===
 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
 arucoParams = cv2.aruco.DetectorParameters()
