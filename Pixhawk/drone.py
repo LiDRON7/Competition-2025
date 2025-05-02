@@ -120,3 +120,22 @@ class Drone:
             0      # alt
         )
         time.sleep(10)
+
+    def goto_position(self, lat, lon, alt):
+        self.set_mode("GUIDED")
+        self.mav.mav.command_long_send(
+            self.mav.target_system,
+            self.mav.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+            0,        # Confirmation
+            0,        # Hold time
+            0,        # Acceptance radius
+            0,        # Pass radius
+            float('nan'),  # Yaw angle
+            lat,
+            lon,
+            alt
+        )
+        print(f"🛰️ Command sent to fly to: lat={lat}, lon={lon}, alt={alt}")
+
+
