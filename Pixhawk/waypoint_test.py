@@ -27,15 +27,15 @@ drone.goto_position(*waypoint_b)
 # Give it time to reach
 time.sleep(15)
 
-waypoint_c = (18.2097490, -67.1397163, 5)  # slightly different coords
+waypoint_c = (18.2097828, -67.1397022, 5)  # slightly different coords
 print(f"🛬 Going to Waypoint C: {waypoint_c}")
 drone.goto_position(*waypoint_c)
 
 time.sleep(15)
+
 # Land
 drone.land()
 
 # Disarm
 drone.disarm()
 print("🏁 Mission completed. Drone disarmed.")
-

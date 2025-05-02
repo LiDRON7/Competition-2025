@@ -21,7 +21,7 @@ class Drone:
             mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
             0, 1, 0, 0, 0, 0, 0, 0
             )
-        
+
     def disarm(self):
         self.mav.mav.command_long_send(
             self.mav.target_system, self.mav.target_component,
@@ -154,7 +154,7 @@ class Drone:
             0, 0                 # Yaw, Yaw rate
         )
         print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
-    
+
     def return_to_launch(self):
         print("Returning to launch...")
         self.mav.mav.command_long_send(
@@ -164,4 +164,3 @@ class Drone:
             0,  # Confirmation
             0, 0, 0, 0, 0, 0, 0  # Empty params
         )
-
