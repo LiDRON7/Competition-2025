@@ -31,7 +31,7 @@ class Drone:
     def get_position(self):
         print("📡 Waiting for GLOBAL_POSITION_INT...")
         start = time.time()
-        while time.time() - start < 10:  # wait up to 10 seconds
+        while time.time() - start < 30:  # wait up to 10 seconds
             msg = self.mav.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
             if msg:
                 lat = msg.lat / 1e7
