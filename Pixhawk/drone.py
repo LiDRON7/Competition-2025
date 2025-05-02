@@ -3,7 +3,7 @@ import time
 
 class Drone:
     def __init__(self):
-        self.mav = mavutil.mavlink_connection('/dev/ttyAMA10', baud = 57600,source_system=255,dialect="ardupilotmega", mavlink1=True)  # Adjust the IP and port as necessary
+        self.mav = mavutil.mavlink_connection('/dev/ttyAMA0', baud = 57600,source_system=255,dialect="ardupilotmega", mavlink1=True)  # Adjust the IP and port as necessary
         print("Waiting for heartbeat...")
         print("Manually waiting for HEARTBEAT...")
         while True:
@@ -91,14 +91,14 @@ class Drone:
 
         time.sleep(10)  # Give time to reach altitude
 
-    def loitering(self, altitude=10):
+    def loitering(self, altitude=10, seconds = 10):
         # Loiter for 10 seconds
         print("Loitering for 10 seconds...")
         self.mav.mav.command_long_send(
             self.mav.target_system, self.mav.target_component,
             mavutil.mavlink.MAV_CMD_NAV_LOITER_TIME,
             0,  # Confirmation
-            10, # Loiter time (in seconds)
+            seconds, # Loiter time (in seconds)
             0, 0, 0,
             0, 0,  # lat/lon (ignored if 0)
             altitude

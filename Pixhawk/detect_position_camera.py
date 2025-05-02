@@ -10,6 +10,7 @@ drone.set_mode("GUIDED")
 drone.arm()
 drone.takeoff(altitude=10)
 drone.set_mode("LOITER")  # Hover until marker detected
+drone.loitering(altitude=10, seconds=10)
 
 # === ARUCO SETUP ===
 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
@@ -59,7 +60,6 @@ while camera_attempts < max_attempts and not marker_detected:
                         marker_detected = True
                         break
 
-                    cv2.imshow("Frame", frame)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
         break  # Camera session completed successfully
