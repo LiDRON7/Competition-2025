@@ -1,68 +1,84 @@
 import cv2
 import depthai
 import time
-from drone import Drone  # Make sure drone.py is in the same directory
+from drone import Drone
 import numpy as np
 
-# Initialize drone connection
+# === DRONE SETUP ===
 drone = Drone()
-print("✅ Drone connected")
-
-# (Optional) Arm and take off — remove if you don't want auto flight here
+drone.set_mode("GUIDED")
 drone.arm()
-print("✅ Drone armed")
+drone.takeoff(altitude=10)
+drone.set_mode("LOITER")  # Hover until marker detected
 
-# Set up ArUco detection
+# === ARUCO SETUP ===
 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_50)
 arucoParams = cv2.aruco.DetectorParameters()
 detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
 
-# DepthAI pipeline setup
-pipeline = depthai.Pipeline()
+# === CAMERA PIPELINE DEFINITION ===
 
-cam_rgb = pipeline.createColorCamera()
-cam_rgb.setPreviewSize(300, 300)
-cam_rgb.setInterleaved(False)
+def create_camera_pipeline():
+    pipeline = depthai.Pipeline()
+    cam_rgb = pipeline.createColorCamera()
+    cam_rgb.setPreviewSize(300, 300)
+    cam_rgb.setInterleaved(False)
 
-xout_rgb = pipeline.createXLinkOut()
-xout_rgb.setStreamName("rgb")
-cam_rgb.preview.link(xout_rgb.input)
+    xout_rgb = pipeline.createXLinkOut()
+    xout_rgb.setStreamName("rgb")
+    cam_rgb.preview.link(xout_rgb.input)
+    return pipeline
 
-with depthai.Device(pipeline) as device:
-    q_rgb = device.getOutputQueue("rgb")
+# === CAMERA HANDLING ===
+camera_attempts = 0
+max_attempts = 2
+marker_detected = False
 
-    marker_detected = False  # To avoid multiple position grabs
-    frame = None
+time.sleep(2)
+while camera_attempts < max_attempts and not marker_detected:
+    try:
+        print(f"🎥 Attempting to start camera (try #{camera_attempts + 1})")
+        pipeline = create_camera_pipeline()
+        with depthai.Device(pipeline) as device:
+            q_rgb = device.getOutputQueue("rgb")
+            print("✅ Camera started. Drone is loitering...")
 
-    while True:
-        in_rgb = q_rgb.tryGet()
-        if in_rgb is not None:
-            frame = in_rgb.getCvFrame()
+            while True:
+                in_rgb = q_rgb.tryGet()
+                if in_rgb is not None:
+                    frame = in_rgb.getCvFrame()
+                    corners, ids, rejected = detector.detectMarkers(frame)
 
-        if frame is not None:
-            corners, ids, rejected = detector.detectMarkers(frame)
+                    if ids is not None and 12 in ids.flatten():
+                        print("🎯 ArUco ID 12 detected!")
+                        lat, lon = drone.get_position()
+                        print(f"📍 GPS: lat={lat:.7f}, lon={lon:.7f}")
 
-            if ids is not None:
-                ids = ids.flatten()
-                cv2.aruco.drawDetectedMarkers(frame, corners, ids)
+                        drone.set_mode("GUIDED")
+                        drone.land()
+                        marker_detected = True
+                        break
 
-                if 12 in ids and not marker_detected:
-                    print("🎯 ArUco marker ID 12 detected")
-                    lat, lon = drone.get_position()
-                    print(f"📍 Drone GPS at detection: lat={lat:.7f}, lon={lon:.7f}")
-                    marker_detected = True  # avoid repeating every frame
+                    cv2.imshow("Frame", frame)
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
+        break  # Camera session completed successfully
+    except Exception as e:
+        camera_attempts += 1
+        print(f"❌ Camera error (attempt {camera_attempts}): {e}")
+        if camera_attempts < max_attempts:
+            print("🔁 Retrying camera initialization...")
+            time.sleep(2)
+        else:
+            print("🛑 Camera failed twice. Landing drone for safety...")
+            drone.set_mode("GUIDED")
+            drone.land()
 
-            else:
-                marker_detected = False  # reset flag when marker is lost
-
-        # Show camera feed
-        cv2.imshow("Frame", frame)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
-            break
-
-# (Optional) land and disarm
+# Always disarm and cleanup
+drone.set_mode("GUIDED")
+drone.land()
+time.sleep(5)
 drone.disarm()
-print("🛬 Drone disarmed. Done.")
 cv2.destroyAllWindows()
+print("✅ Drone disarmed. Mission ended.")
 

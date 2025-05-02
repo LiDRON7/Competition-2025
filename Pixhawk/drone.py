@@ -3,7 +3,7 @@ import time
 
 class Drone:
     def __init__(self):
-        self.mav = mavutil.mavlink_connection('/dev/ttyUSB0', baud = 57600,source_system=255,dialect="ardupilotmega", mavlink1=True)  # Adjust the IP and port as necessary
+        self.mav = mavutil.mavlink_connection('/dev/ttyAMA10', baud = 57600,source_system=255,dialect="ardupilotmega", mavlink1=True)  # Adjust the IP and port as necessary
         print("Waiting for heartbeat...")
         print("Manually waiting for HEARTBEAT...")
         while True:
@@ -69,7 +69,7 @@ class Drone:
         # print("YES")
 
 
-    def takeoff_loiter_land(self, altitude=10):
+    def takeoff(self, altitude=10):
         # Set mode to GUIDED
         self.set_mode("GUIDED")
 
@@ -91,6 +91,7 @@ class Drone:
 
         time.sleep(10)  # Give time to reach altitude
 
+    def loitering(self, altitude=10):
         # Loiter for 10 seconds
         print("Loitering for 10 seconds...")
         self.mav.mav.command_long_send(
@@ -102,20 +103,7 @@ class Drone:
             0, 0,  # lat/lon (ignored if 0)
             altitude
         )
-
         time.sleep(10)  # Wait during loiter
-
-        # Land
-        print("Initiating landing...")
-        self.mav.mav.command_long_send(
-            self.mav.target_system, self.mav.target_component,
-            mavutil.mavlink.MAV_CMD_NAV_LAND,
-            0,
-            0, 0, 0, 0,
-            0, 0,  # lat/lon
-            0      # alt
-        )
-        time.sleep(10)
 
     def set_mode(self, mode):
         mode_id = self.mav.mode_mapping().get(mode)
@@ -128,4 +116,15 @@ class Drone:
         )
         print(f"Mode set to {mode}")
 
-
+    def land(self):
+        # Land
+        print("Initiating landing...")
+        self.mav.mav.command_long_send(
+            self.mav.target_system, self.mav.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_LAND,
+            0,
+            0, 0, 0, 0,
+            0, 0,  # lat/lon
+            0      # alt
+        )
+        time.sleep(10)
