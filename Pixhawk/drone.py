@@ -13,6 +13,8 @@ class Drone:
                 self.mav.target_component = msg.get_srcComponent()
                 print(f"✅ Got HEARTBEAT from system {self.mav.target_system}, component {self.mav.target_component}")
                 break
+        self.boot_time = time.time()
+
 
     def arm(self):
         self.mav.mav.command_long_send(
@@ -126,17 +128,18 @@ class Drone:
     
         lat_int = int(lat * 1e7)
         lon_int = int(lon * 1e7)
+        time_boot_ms = int((time.time() - self.boot_time) * 1000)  # ✅ Safe value under 4294967295
     
         self.mav.mav.set_position_target_global_int_send(
-            int(time.time() * 1000),     # ✅ time_boot_ms: must be in milliseconds
+            time_boot_ms,
             self.mav.target_system,
             self.mav.target_component,
             mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-            0b0000111111111000,         # type_mask: position only
+            0b0000111111111000,  # Type mask to use position only
             lat_int, lon_int, alt,
-            0, 0, 0,                    # velocity
-            0, 0, 0,                    # acceleration
-            0, 0                        # yaw, yaw_rate
+            0, 0, 0,             # Velocity
+            0, 0, 0,             # Acceleration
+            0, 0                 # Yaw, Yaw rate
         )
         print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
     
