@@ -15,7 +15,6 @@ class Drone:
                 break
         self.boot_time = time.time()
 
-
     def arm(self):
         self.mav.mav.command_long_send(
             self.mav.target_system, self.mav.target_component,
@@ -63,6 +62,15 @@ class Drone:
         self.mav.mav.send(msg)
         # print("YES")
 
+    def return_to_launch(self):
+        print("Returning to launch...")
+        self.mav.mav.command_long_send(
+            self.mav.target_system,
+            self.mav.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH,
+            0,  # Confirmation
+            0, 0, 0, 0, 0, 0, 0  # Empty params
+        )
 
     def takeoff(self, altitude=10):
         # Set mode to GUIDED
@@ -124,18 +132,22 @@ class Drone:
         time.sleep(10)
 
     def goto_position(self, lat, lon, alt):
+        if not self.geofence.is_within_bounds(lat, lon, alt):
+            print(f"❌ Position ({lat}, {lon}, {alt}) is outside of geofence bounds.")
+            self.return_to_launch()
+            return
+
         self.set_mode("GUIDED")
-    
         lat_int = int(lat * 1e7)
         lon_int = int(lon * 1e7)
-        time_boot_ms = int((time.time() - self.boot_time) * 1000)  # ✅ Safe value under 4294967295
-    
+        time_boot_ms = int((time.time() - self.boot_time) * 1000)
+
         self.mav.mav.set_position_target_global_int_send(
             time_boot_ms,
             self.mav.target_system,
             self.mav.target_component,
             mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-            0b0000111111111000,  # Type mask to use position only
+            0b0000111111111000,  # Use position only
             lat_int, lon_int, alt,
             0, 0, 0,             # Velocity
             0, 0, 0,             # Acceleration
@@ -143,3 +155,13 @@ class Drone:
         )
         print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
     
+    def return_to_launch(self):
+        print("Returning to launch...")
+        self.mav.mav.command_long_send(
+            self.mav.target_system,
+            self.mav.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH,
+            0,  # Confirmation
+            0, 0, 0, 0, 0, 0, 0  # Empty params
+        )
+
