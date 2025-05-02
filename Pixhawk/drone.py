@@ -29,24 +29,17 @@ class Drone:
         )
 
     def get_position(self):
-        # Request position stream (only once)
-        self.mav.mav.request_data_stream_send(
-                self.mav.target_system,
-                self.mav.target_component,
-                mavutil.mavlink.MAV_DATA_STREAM_POSITION,
-                1, 1
-                )
-        # Wait for GPS fix
-        while True:
-            msg = self.mav.recv_match(type='GPS_RAW_INT', blocking=True)
+        print("📡 Waiting for GLOBAL_POSITION_INT...")
+        start = time.time()
+        while time.time() - start < 10:  # wait up to 10 seconds
+            msg = self.mav.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
             if msg:
-                print("GPS Fix acquired!")
-                break
-        # Get global position
-        msg = self.mav.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        lat = msg.lat / 1e7
-        lon = msg.lon / 1e7
-        return lat, lon
+                lat = msg.lat / 1e7
+                lon = msg.lon / 1e7
+                print(f"📍 Got position: lat={lat}, lon={lon}")
+                return lat, lon
+            time.sleep(0.1)
+        raise TimeoutError("❌ Timed out waiting for GLOBAL_POSITION_INT")
 
     def send_waypoint(self, lat, lon):
         msg = mavutil.mavlink.MAVLink_mission_item_message(
