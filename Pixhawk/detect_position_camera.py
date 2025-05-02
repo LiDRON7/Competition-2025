@@ -77,7 +77,6 @@ while camera_attempts < max_attempts and not marker_detected:
 # Always disarm and cleanup
 drone.set_mode("GUIDED")
 drone.land()
-time.sleep(5)
 drone.disarm()
 cv2.destroyAllWindows()
 print("✅ Drone disarmed. Mission ended.")

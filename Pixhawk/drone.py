@@ -103,7 +103,6 @@ class Drone:
             0, 0,  # lat/lon (ignored if 0)
             altitude
         )
-        time.sleep(10)  # Wait during loiter
 
     def set_mode(self, mode):
         mode_id = self.mav.mode_mapping().get(mode)
