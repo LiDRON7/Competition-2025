@@ -8,7 +8,7 @@ import numpy as np
 drone = Drone()
 drone.set_mode("GUIDED")
 drone.arm()
-drone.takeoff(altitude=10)
+drone.takeoff(altitude=5)
 print("🛑 Staying in GUIDED mode for marker search (do not switch to LOITER).")
 time.sleep(2)  # Give time to stabilize at 10m
 # === ARUCO SETUP ===
