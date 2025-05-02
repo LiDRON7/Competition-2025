@@ -49,8 +49,8 @@ while camera_attempts < max_attempts and not marker_detected:
                     frame = in_rgb.getCvFrame()
                     corners, ids, rejected = detector.detectMarkers(frame)
 
-                    if ids is not None and 12 in ids.flatten():
-                        print("🎯 ArUco ID 12 detected!")
+                    if ids is not None and 14 in ids.flatten():
+                        print("🎯 ArUco ID 14 detected!")
                         lat, lon = drone.get_position()
                         print(f"📍 GPS: lat={lat:.7f}, lon={lon:.7f}")
 
