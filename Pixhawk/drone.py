@@ -123,20 +123,20 @@ class Drone:
 
     def goto_position(self, lat, lon, alt):
         self.set_mode("GUIDED")
-        # Convert lat/lon to integers in 1E7 scale (as required by MAVLink)
+    
         lat_int = int(lat * 1e7)
         lon_int = int(lon * 1e7)
+    
         self.mav.mav.set_position_target_global_int_send(
-            int(time.time() * 1e6),     # time_boot_ms (microseconds)
+            int(time.time() * 1000),     # ✅ time_boot_ms: must be in milliseconds
             self.mav.target_system,
             self.mav.target_component,
             mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-            0b0000111111111000,         # type_mask: enable only position
+            0b0000111111111000,         # type_mask: position only
             lat_int, lon_int, alt,
             0, 0, 0,                    # velocity
             0, 0, 0,                    # acceleration
             0, 0                        # yaw, yaw_rate
         )
         print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
-
-
+    
