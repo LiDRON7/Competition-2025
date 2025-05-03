@@ -14,7 +14,10 @@ class Drone:
                 print(f"✅ Got HEARTBEAT from system {self.mav.target_system}, component {self.mav.target_component}")
                 break
         self.boot_time = time.time()
+        self.geofence_bounds = {}
+        self.geofence_active = False
 
+    # Drone Set Up 
     def arm(self):
         self.mav.mav.command_long_send(
             self.mav.target_system, self.mav.target_component,
@@ -29,6 +32,25 @@ class Drone:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
+    # Geofence
+    def set_geofence(self, min_lat, max_lat, min_lon, max_lon, min_alt, max_alt):
+        self.geofence_active = True
+        self.geofence_bounds = {
+            "min_lat": min_lat,
+            "max_lat": max_lat,
+            "min_lon": min_lon,
+            "max_lon": max_lon,
+            "min_alt": min_alt,
+            "max_alt": max_alt
+        }
+        print("📐 Geofence set.")
+
+    def disable_geofence(self):
+        self.geofence_active = False
+        self.geofence_bounds = {}
+        print("Geofence disabled")
+
+    # ================ Movement ==============
     def get_position(self):
         print("📡 Waiting for GLOBAL_POSITION_INT...")
         start = time.time()
@@ -41,6 +63,30 @@ class Drone:
                 return lat, lon
             time.sleep(0.1)
         raise TimeoutError("❌ Timed out waiting for GLOBAL_POSITION_INT")
+
+    def goto_position(self, lat, lon, alt):
+        if getattr(self, 'geofence_active', False) and not self.is_within_bounds(lat, lon, alt):
+            print(f"❌ Target ({lat}, {lon}, {alt}) is outside the geofence.")
+            self.return_to_launch()
+            return
+
+        self.set_mode("GUIDED")
+        lat_int = int(lat * 1e7)
+        lon_int = int(lon * 1e7)
+        time_boot_ms = int((time.time() - self.boot_time) * 1000)
+
+        self.mav.mav.set_position_target_global_int_send(
+            time_boot_ms,
+            self.mav.target_system,
+            self.mav.target_component,
+            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+            0b0000111111111000,  # Use position only
+            lat_int, lon_int, alt,
+            0, 0, 0,             # Velocity
+            0, 0, 0,             # Acceleration
+            0, 0                 # Yaw, Yaw rate
+        )
+        print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
 
     def return_to_launch(self):
         print("Returning to launch...")
@@ -87,17 +133,6 @@ class Drone:
             altitude
         )
 
-    def set_mode(self, mode):
-        mode_id = self.mav.mode_mapping().get(mode)
-        if mode_id is None:
-            raise Exception(f"Unknown mode: {mode}")
-        self.mav.mav.set_mode_send(
-            self.mav.target_system,
-            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-            mode_id
-        )
-        print(f"Mode set to {mode}")
-
     def land(self):
         # Land
         print("Initiating landing...")
@@ -111,26 +146,19 @@ class Drone:
         )
         time.sleep(10)
 
-    def goto_position(self, lat, lon, alt):
-        # if not self.geofence.is_within_bounds(lat, lon, alt):
-        #    print(f"❌ Position ({lat}, {lon}, {alt}) is outside of geofence bounds.")
-        #    self.return_to_launch()
-        #    return
-
-        self.set_mode("GUIDED")
-        lat_int = int(lat * 1e7)
-        lon_int = int(lon * 1e7)
-        time_boot_ms = int((time.time() - self.boot_time) * 1000)
-
-        self.mav.mav.set_position_target_global_int_send(
-            time_boot_ms,
+    def set_mode(self, mode):
+        mode_id = self.mav.mode_mapping().get(mode)
+        if mode_id is None:
+            raise Exception(f"Unknown mode: {mode}")
+        self.mav.mav.set_mode_send(
             self.mav.target_system,
-            self.mav.target_component,
-            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-            0b0000111111111000,  # Use position only
-            lat_int, lon_int, alt,
-            0, 0, 0,             # Velocity
-            0, 0, 0,             # Acceleration
-            0, 0                 # Yaw, Yaw rate
+            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            mode_id
         )
-        print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
+        print(f"Mode set to {mode}")
+
+    def is_within_bounds(self, lat, lon, alt):
+        b = self.geofence_bounds
+        return (b["min_lat"] <= lat <= b["max_lat"] and
+                b["min_lon"] <= lon <= b["max_lon"] and
+                b["min_alt"] <= alt <= b["max_alt"])
