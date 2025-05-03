@@ -65,10 +65,10 @@ class Drone:
         raise TimeoutError("❌ Timed out waiting for GLOBAL_POSITION_INT")
 
     def goto_position(self, lat, lon, alt):
-        if getattr(self, 'geofence_active', False) and not self.is_within_bounds(lat, lon, alt):
-            print(f"❌ Target ({lat}, {lon}, {alt}) is outside the geofence.")
-            self.return_to_launch()
-            return
+        #if getattr(self, 'geofence_active', False) and not self.is_within_bounds(lat, lon, alt):
+        #    print(f"❌ Target ({lat}, {lon}, {alt}) is outside the geofence.")
+        #    self.return_to_launch()
+        #    return
 
         self.set_mode("GUIDED")
         lat_int = int(lat * 1e7)

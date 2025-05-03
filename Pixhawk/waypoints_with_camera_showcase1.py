@@ -15,6 +15,9 @@ marker_event = threading.Event()
 stop_event = threading.Event()
 
 aruco_number = 14
+
+altitude_sl = 9
+
 # === CAMERA PIPELINE ===
 def create_camera_pipeline():
     pipeline = depthai.Pipeline()
@@ -30,7 +33,7 @@ def create_camera_pipeline():
 # === CAMERA THREAD FUNCTION ===
 def camera_loop(marker_event, stop_event, max_attempts=5):
     attempts = 0
-
+    
     while attempts < max_attempts and not stop_event.is_set() and not marker_event.is_set():
         try:
             print(f"🎥 Attempting to start camera (try #{attempts + 1})")
@@ -45,7 +48,7 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
                         frame = in_rgb.getCvFrame()
                         corners, ids, _ = detector.detectMarkers(frame)
                         if ids is not None and aruco_number in ids.flatten():
-                            print(f`ArUco marker {aruco_number} detected! Returning to launch...`)
+                            print(f"ArUco marker {aruco_number} detected! Returning to launch...")
                             marker_event.set()
                             return
                     time.sleep(0.1)
@@ -63,9 +66,9 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
 # === FLIGHT THREAD FUNCTION ===
 def flight_path(drone, marker_event):
     waypoints = [
-        (18.4655390, -66.1057360, 10),  # Example waypoints (lat, lon, alt)
-        (18.4657400, -66.1059000, 10),
-        (18.4658000, -66.1055000, 10)
+        (18.4655390, -66.1057360, altitude_sl),  # Example waypoints (lat, lon, alt)
+        (18.4657400, -66.1059000, altitude_sl),
+        (18.4658000, -66.1055000, altitude_sl)
     ]
 
     print("🚀 Starting mission with waypoints...")
@@ -79,28 +82,54 @@ def flight_path(drone, marker_event):
         time.sleep(10)  # Give it time to reach the point
 
     if marker_event.is_set():
-        drone.return_to_launch()
+        drone.land()
     else:
         print("✅ Mission complete. Returning to launch.")
-        drone.return_to_launch()
+        drone.land()
+
+# === MARKER LISTENER THREAD FUNCTION ===
+def marker_listener(drone, marker_event, stop_event):
+    while not stop_event.is_set():
+        if marker_event.is_set():
+            position = drone.get_position()  # Assumes this returns (lat, lon, alt) or similar
+            print(f"📡 ArUco detected! Drone position: {position}")
+            return  # Exit thread after handling once
+        time.sleep(0.2)
 
 # === MAIN LOGIC ===
+
+start_time = time.time()
+
 drone = Drone()
+
+# Set geofence boundaries here
+#drone.set_geofence(
+#    min_lat=18.4654000, max_lat=18.4660000,
+#    min_lon=-66.1060000, max_lon=-66.1050000,
+#    min_alt=3, max_alt=20
+#)
+
 drone.set_mode("GUIDED")
 drone.arm()
-drone.takeoff(altitude=10)
+drone.takeoff(altitude=altitude_sl)
 
 cam_thread = threading.Thread(target=camera_loop, args=(marker_event, stop_event))
 flight_thread = threading.Thread(target=flight_path, args=(drone, marker_event))
+marker_listener_thread = threading.Thread(target=marker_listener, args=(drone, marker_event, stop_event))
 
 cam_thread.start()
 flight_thread.start()
+marker_listener_thread.start()
 
 flight_thread.join()
 stop_event.set()
 cam_thread.join()
+marker_listener_thread.join()
 
 drone.disarm()
 print("✅ Drone disarmed. Mission complete.")
 cv2.destroyAllWindows()
 
+end_time = time.time()  # End the timer
+elapsed = end_time - start_time
+print(f"⏱️ Total mission duration: {elapsed:.2f} seconds.")
