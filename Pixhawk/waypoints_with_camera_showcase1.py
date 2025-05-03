@@ -14,9 +14,9 @@ detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
 marker_event = threading.Event()
 stop_event = threading.Event()
 
-aruco_number = 14
+aruco_number = 4
 
-altitude_sl = 9
+altitude_sl = 6
 
 # === CAMERA PIPELINE ===
 def create_camera_pipeline():
@@ -90,7 +90,7 @@ def flight_path(drone, marker_event):
 
         print(f"📍 Going to waypoint: {lat}, {lon}, {alt}")
         drone.goto_position(lat, lon, alt)
-        time.sleep(10)  # Give it time to reach the point
+        time.sleep(9)  # Give it time to reach the point
 
     if marker_event.is_set():
         drone.land()
