@@ -16,7 +16,7 @@ stop_event = threading.Event()
 
 aruco_number = 13
 
-altitude_sl = 8
+altitude_sl = 3
 
 # === CAMERA PIPELINE ===
 def create_camera_pipeline():
@@ -41,8 +41,6 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
             with depthai.Device(pipeline) as device:
                 q_rgb = device.getOutputQueue("rgb")
                 print("✅ Camera started successfully.")
-                correct_aruco = False
-                incorrect_aruco = False
                 while not stop_event.is_set() and not marker_event.is_set():
                     in_rgb = q_rgb.tryGet()
                     if in_rgb:
@@ -50,15 +48,11 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
                         corners, ids, _ = detector.detectMarkers(frame)
                         if ids is not None and aruco_number in ids.flatten():
                             print(f"ArUco marker {aruco_number} detected! - FOUND ARUCO")
-                            correct_aruco = True
-                        elif ids is not None and len(ids.flatten()) > 0:
-                            incorrect_aruco = True
-                            print(f"Aruco marker {ids.flatten()[0]} detected - Not the one")
-
-                        if correct_aruco and incorrect_aruco:
-                            print("Both Aruco found, landing")
                             marker_event.set()
                             return
+
+                        elif ids is not None and len(ids.flatten()) > 0:
+                            print(f"Aruco marker {ids.flatten()[0]} detected - Not the one")
 
                     time.sleep(0.1)
                 return  # End after stop or detection
@@ -76,10 +70,31 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
 def flight_path(drone, marker_event):
     waypoints = [
         (18.3932975, -66.1510085, altitude_sl),  # Example waypoints (lat, lon, alt)
-        (18.3932332, -66.1509562, altitude_sl),
-        (18.3932504, -66.1510735, altitude_sl),
-        (18.3933535, -66.1510581, altitude_sl),
-        (18.3933337, -66.1509448, altitude_sl),
+        (18.3932911, -66.1510058, altitude_sl),
+        (18.3932956, -66.1509991, altitude_sl),
+        (18.3933008, -66.1510019, altitude_sl),
+        (18.3932929, -66.1510002, altitude_sl),
+        (18.3932498, -66.1509541, altitude_sl),
+        (18.3932345, -66.1509568, altitude_sl),
+        (18.3932271, -66.1509563, altitude_sl),
+        (18.3932377, -66.1509464, altitude_sl),
+        (18.3932415, -66.1509676, altitude_sl),
+        (18.3932774, -66.1510514, altitude_sl),
+        (18.3932790, -66.1510665, altitude_sl),
+        (18.3932695, -66.1510470, altitude_sl),
+        (18.3932679, -66.1510611, altitude_sl),
+        (18.3932682, -66.1510661, altitude_sl),
+        (18.3933700, -66.1510433, altitude_sl),
+        (18.3933675, -66.1510574, altitude_sl),
+        (18.3933808, -66.1510527, altitude_sl),
+        (18.3933586, -66.1510440, altitude_sl),
+        (18.3933644, -66.1510547, altitude_sl),
+        (18.3933781, -66.1510450, altitude_sl),
+        (18.3933516, -66.1509468, altitude_sl),
+        (18.3933516, -66.1509347, altitude_sl),
+        (18.3933420, -66.1509421, altitude_sl),
+        (18.3933528, -66.1509410, altitude_sl),
+        (18.3933455, -66.1509329, altitude_sl),
     ]
 
     print("🚀 Starting mission with waypoints...")
@@ -90,7 +105,7 @@ def flight_path(drone, marker_event):
 
         print(f"📍 Going to waypoint: {lat}, {lon}, {alt}")
         drone.goto_position(lat, lon, alt)
-        time.sleep(12)  # Give it time to reach the point
+        time.sleep(5)  # Give it time to reach the point
 
     if marker_event.is_set():
         drone.land()
