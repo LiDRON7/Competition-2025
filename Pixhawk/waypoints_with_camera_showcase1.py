@@ -14,7 +14,7 @@ detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
 marker_event = threading.Event()
 stop_event = threading.Event()
 
-aruco_number = 4
+aruco_number = 13
 
 altitude_sl = 6
 
