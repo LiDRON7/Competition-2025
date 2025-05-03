@@ -16,7 +16,7 @@ stop_event = threading.Event()
 
 aruco_number = 13
 
-altitude_sl = 6
+altitude_sl = 8
 
 # === CAMERA PIPELINE ===
 def create_camera_pipeline():
@@ -75,11 +75,11 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
 # === FLIGHT THREAD FUNCTION ===
 def flight_path(drone, marker_event):
     waypoints = [
-        (18.3932749, -66.1510024, altitude_sl),  # Example waypoints (lat, lon, alt)
-        (18.3932065, -66.1509494, altitude_sl),
-        (18.3932218, -66.1510849, altitude_sl),
-        (18.3933598, -66.1510527, altitude_sl),
-        (18.3933376, -66.1509307, altitude_sl),
+        (18.3932873, -66.1510018, altitude_sl),  # Example waypoints (lat, lon, alt)
+        (18.3932230, -66.1509528, altitude_sl),
+        (18.3932319, -66.1510769, altitude_sl),
+        (18.3933707, -66.1510534, altitude_sl),
+        (18.3933554, -66.1509327, altitude_sl),
     ]
 
     print("🚀 Starting mission with waypoints...")
@@ -90,7 +90,7 @@ def flight_path(drone, marker_event):
 
         print(f"📍 Going to waypoint: {lat}, {lon}, {alt}")
         drone.goto_position(lat, lon, alt)
-        time.sleep(9)  # Give it time to reach the point
+        time.sleep(12)  # Give it time to reach the point
 
     if marker_event.is_set():
         drone.land()
