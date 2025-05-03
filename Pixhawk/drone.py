@@ -42,26 +42,6 @@ class Drone:
             time.sleep(0.1)
         raise TimeoutError("❌ Timed out waiting for GLOBAL_POSITION_INT")
 
-    def send_waypoint(self, lat, lon):
-        msg = mavutil.mavlink.MAVLink_mission_item_message(
-            self.mav.target_system, self.mav.target_component,
-            0,                      # Sequence
-            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
-            0,                      # Current
-            0,                      # Autocontinue
-            0,                      # Param 1 (Hold time in seconds)
-            0,                      # Param 2 (Acceptance radius in meters)
-            0,                      # Param 3 (Pass through to waypoint)
-            0,                      # Param 4 (Yaw angle)
-            lat,                    # Latitude
-            lon,                    # Longitude
-            0)                    # Altitude
-
-        # pos = self.get_position()
-        self.mav.mav.send(msg)
-        # print("YES")
-
     def return_to_launch(self):
         print("Returning to launch...")
         self.mav.mav.command_long_send(
@@ -132,10 +112,10 @@ class Drone:
         time.sleep(10)
 
     def goto_position(self, lat, lon, alt):
-        if not self.geofence.is_within_bounds(lat, lon, alt):
-            print(f"❌ Position ({lat}, {lon}, {alt}) is outside of geofence bounds.")
-            self.return_to_launch()
-            return
+        # if not self.geofence.is_within_bounds(lat, lon, alt):
+        #    print(f"❌ Position ({lat}, {lon}, {alt}) is outside of geofence bounds.")
+        #    self.return_to_launch()
+        #    return
 
         self.set_mode("GUIDED")
         lat_int = int(lat * 1e7)
@@ -154,13 +134,3 @@ class Drone:
             0, 0                 # Yaw, Yaw rate
         )
         print(f"🛰️ Setpoint sent to: lat={lat}, lon={lon}, alt={alt}")
-
-    def return_to_launch(self):
-        print("Returning to launch...")
-        self.mav.mav.command_long_send(
-            self.mav.target_system,
-            self.mav.target_component,
-            mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH,
-            0,  # Confirmation
-            0, 0, 0, 0, 0, 0, 0  # Empty params
-        )
