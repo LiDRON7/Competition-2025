@@ -75,11 +75,11 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
 # === FLIGHT THREAD FUNCTION ===
 def flight_path(drone, marker_event):
     waypoints = [
-        (18.3932873, -66.1510018, altitude_sl),  # Example waypoints (lat, lon, alt)
-        (18.3932230, -66.1509528, altitude_sl),
-        (18.3932319, -66.1510769, altitude_sl),
-        (18.3933707, -66.1510534, altitude_sl),
-        (18.3933554, -66.1509327, altitude_sl),
+        (18.3932975, -66.1510085, altitude_sl),  # Example waypoints (lat, lon, alt)
+        (18.3932332, -66.1509562, altitude_sl),
+        (18.3932504, -66.1510735, altitude_sl),
+        (18.3933535, -66.1510581, altitude_sl),
+        (18.3933337, -66.1509448, altitude_sl),
     ]
 
     print("🚀 Starting mission with waypoints...")
