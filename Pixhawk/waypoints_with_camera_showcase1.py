@@ -77,7 +77,9 @@ def flight_path(drone, marker_event):
     waypoints = [
         (18.3932749, -66.1510024, altitude_sl),  # Example waypoints (lat, lon, alt)
         (18.3932065, -66.1509494, altitude_sl),
-        (18.3932218, -66.1510849, altitude_sl)
+        (18.3932218, -66.1510849, altitude_sl),
+        (18.3933598, -66.1510527, altitude_sl),
+        (18.3933376, -66.1509307, altitude_sl),
     ]
 
     print("🚀 Starting mission with waypoints...")
