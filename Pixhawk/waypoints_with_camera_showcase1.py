@@ -41,16 +41,25 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
             with depthai.Device(pipeline) as device:
                 q_rgb = device.getOutputQueue("rgb")
                 print("✅ Camera started successfully.")
-
+                correct_aruco = False
+                incorrect_aruco = False
                 while not stop_event.is_set() and not marker_event.is_set():
                     in_rgb = q_rgb.tryGet()
                     if in_rgb:
                         frame = in_rgb.getCvFrame()
                         corners, ids, _ = detector.detectMarkers(frame)
                         if ids is not None and aruco_number in ids.flatten():
-                            print(f"ArUco marker {aruco_number} detected! Returning to launch...")
+                            print(f"ArUco marker {aruco_number} detected! - FOUND ARUCO")
+                            correct_aruco = True
+                        elif ids is not None and len(ids.flatten()) > 0:
+                            incorrect_aruco = True
+                            print(f"Aruco marker {ids.flatten()[0]} detected - Not the one")
+
+                        if correct_aruco and incorrect_aruco:
+                            print("Both Aruco found, landing")
                             marker_event.set()
                             return
+
                     time.sleep(0.1)
                 return  # End after stop or detection
         except Exception as e:
@@ -66,9 +75,9 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
 # === FLIGHT THREAD FUNCTION ===
 def flight_path(drone, marker_event):
     waypoints = [
-        (18.4655390, -66.1057360, altitude_sl),  # Example waypoints (lat, lon, alt)
-        (18.4657400, -66.1059000, altitude_sl),
-        (18.4658000, -66.1055000, altitude_sl)
+        (18.3932749, -66.1510024, altitude_sl),  # Example waypoints (lat, lon, alt)
+        (18.3932065, -66.1509494, altitude_sl),
+        (18.3932218, -66.1510849, altitude_sl)
     ]
 
     print("🚀 Starting mission with waypoints...")
