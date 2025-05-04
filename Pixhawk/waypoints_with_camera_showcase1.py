@@ -40,7 +40,7 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
             pipeline = create_camera_pipeline()
             with depthai.Device(pipeline) as device:
                 q_rgb = device.getOutputQueue("rgb")
-                print("✅ Camera started successfully.")
+                print("Camera started successfully.")
                 while not stop_event.is_set() and not marker_event.is_set():
                     in_rgb = q_rgb.tryGet()
                     if in_rgb:
@@ -58,12 +58,12 @@ def camera_loop(marker_event, stop_event, max_attempts=5):
                 return  # End after stop or detection
         except Exception as e:
             attempts += 1
-            print(f"❌ Camera error (attempt {attempts}): {e}")
+            print(f"Camera error (attempt {attempts}): {e}")
             if attempts < max_attempts:
-                print("🔁 Retrying camera initialization...")
+                print("Retrying camera initialization...")
                 time.sleep(2)
             else:
-                print("🛑 Camera failed multiple times. Aborting mission.")
+                print("Camera failed multiple times. Aborting mission.")
                 marker_event.set()
 
 # === FLIGHT THREAD FUNCTION ===
@@ -100,7 +100,7 @@ def flight_path(drone, marker_event):
     print("🚀 Starting mission with waypoints...")
     for lat, lon, alt in waypoints:
         if marker_event.is_set():
-            print("⚠️ Marker detected during mission. Aborting path...")
+            print("Marker detected during mission. Aborting path...")
             break
 
         print(f"📍 Going to waypoint: {lat}, {lon}, {alt}")
@@ -110,7 +110,7 @@ def flight_path(drone, marker_event):
     if marker_event.is_set():
         drone.land()
     else:
-        print("✅ Mission complete. Returning to launch.")
+        print("Mission complete. Returning to launch.")
         drone.land()
 
 # === MARKER LISTENER THREAD FUNCTION ===
@@ -118,7 +118,7 @@ def marker_listener(drone, marker_event, stop_event):
     while not stop_event.is_set():
         if marker_event.is_set():
             position = drone.get_position()  # Assumes this returns (lat, lon, alt) or similar
-            print(f"📡 ArUco detected! Drone position: {position}")
+            print(f"ArUco detected! Drone position: {position}")
             return  # Exit thread after handling once
         time.sleep(0.2)
 
@@ -153,9 +153,9 @@ cam_thread.join()
 marker_listener_thread.join()
 
 drone.disarm()
-print("✅ Drone disarmed. Mission complete.")
+print("Drone disarmed. Mission complete.")
 cv2.destroyAllWindows()
 
 end_time = time.time()  # End the timer
 elapsed = end_time - start_time
-print(f"⏱️ Total mission duration: {elapsed:.2f} seconds.")
+print(f"Total mission duration: {elapsed:.2f} seconds.")
