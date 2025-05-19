@@ -3,6 +3,10 @@
 
 The main code used to fly the drone in Competition 2025 is located in ./Pixhawk. There are some test scripts that can be run to verify that everything is working. The script that has "everything" in place—camera detection, waypoints, and GPS data collection—is ./Pixhawk/waypoints_with_camera_showcase1.py.
 
+Don't forget to install the necessary libraries:
+
+    $ pip install -r requirements.txt
+
 Sometimes the GPS doesn't work when launching a script, so it's important to first run:
 
     $ mavproxy.py --master=/dev/ttyAMA0
